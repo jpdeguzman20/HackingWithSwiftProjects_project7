@@ -15,7 +15,20 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        
+        // Storyboard creates a window in which all the view controllers are shown. The other tab window is given its initial view controller and gets set to its rootViewController property.
+        // Here, view controller is embedded in a navigation controller, which is embedded inside a tab bar controller. Thus, the root view is the tab bar controller.
+        if let tabBarController = window?.rootViewController as? UITabBarController {
+            // We need to create a new ViewController by hand, so this means that we need to first get a reference to the storyboard file.
+            let storyboard = UIStoryboard(name: "Main", bundle: nil)
+            // We create our view controller by calling the instantiateViewController method, passing in the storyboard ID of the view controller we want.
+            let vc = storyboard.instantiateViewController(withIdentifier: "NavController")
+            // Create the new tab bar item and give it the "Top Rated" icon
+            vc.tabBarItem = UITabBarItem(tabBarSystemItem: .topRated, tag: 1)
+            // Add our new tab bar to the tab bar controller
+            tabBarController.viewControllers?.append(vc)
+        }
+        
         return true
     }
 

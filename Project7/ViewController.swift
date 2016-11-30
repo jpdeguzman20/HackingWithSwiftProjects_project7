@@ -19,7 +19,14 @@ class ViewController: UITableViewController {
         // NOTE: Downloading the data from the internet in our viewDidLoad() method will cause our app to lock up until all the data has been transferred. In later projects, I should avoid doing this.
         
         // We make urlString point to the whitehouse.gov server to get the json information
-        let urlString = "https://api.whitehouse.gov/v1/petitions.json?limit=100"
+        let urlString: String
+        
+        if navigationController?.tabBarItem.tag == 0 {
+            urlString = "https://api.whitehouse.gov/v1/petitions.json?limit=100"
+        } else {
+            urlString = "https://api.whitehouse.gov/v1/petitions.json?signatureCountFloor=10000&limit=100"
+        }
+        
         
         // We use if let to make sure the URL is valid
         if let url = URL(string: urlString) {
@@ -30,9 +37,12 @@ class ViewController: UITableViewController {
                 // Check to see if the json status is 200, and if it is we're good to go
                 if json["metadata"]["responseInfo"]["status"].intValue == 200 {
                     parse(json: json)
+                    return
                 }
             }
         }
+        
+        showError()
     }
     
     // Parse the JSON data occording to the key and then store it in a dictionary. Append the dictionary obj to the array
@@ -49,16 +59,30 @@ class ViewController: UITableViewController {
         tableView.reloadData()
     }
     
+    func showError() {
+        let ac = UIAlertController(title: "Loading error", message: "There was a problem loading the feed; please check your connection and try again", preferredStyle: .alert)
+        ac.addAction(UIAlertAction(title: "OK", style: .default))
+        present(ac, animated: true)
+    }
+    
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return petitions.count
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
+        
         let petition = petitions[indexPath.row]
         cell.textLabel?.text = petition["title"]
         cell.detailTextLabel?.text = petition["body"]
+        
         return cell
+    }
+    
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let vc = DetailViewController()
+        vc.detailItem = petitions[indexPath.row]
+        navigationController?.pushViewController(vc, animated: true)
     }
 
     override func didReceiveMemoryWarning() {
