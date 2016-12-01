@@ -10,13 +10,20 @@ import UIKit
 
 class ViewController: UITableViewController {
 
+    // We use General Central Dispatch (GCD) to run code in the background
+    
     // This property represents an array of dictionaries, with each dictionary holding a string for its key and a string for its value
     var petitions = [[String: String]]()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // NOTE: Downloading the data from the internet in our viewDidLoad() method will cause our app to lock up until all the data has been transferred. In later projects, I should avoid doing this.
+        // The performSelector(inBackground:) method allows you to run the following selector code in the background thread
+        performSelector(inBackground: #selector(fetchJSON), with: nil)
+    }
+    
+    func fetchJSON() {
+        // NOTE: It's never okay to do user interface work on the background thread.
         
         // We make urlString point to the whitehouse.gov server to get the json information
         let urlString: String
@@ -33,7 +40,7 @@ class ViewController: UITableViewController {
             // We make a Data object using the contentsOf method that returns a URL, but since this might throw an error we have to use 'try?'
             if let data = try? Data(contentsOf: url) {
                 let json = JSON(data: data)
-                
+                    
                 // Check to see if the json status is 200, and if it is we're good to go
                 if json["metadata"]["responseInfo"]["status"].intValue == 200 {
                     parse(json: json)
@@ -42,7 +49,8 @@ class ViewController: UITableViewController {
             }
         }
         
-        showError()
+        // The performSelector(onMainThread:) method allows you to execute the following code back on the main threadm instead of the background thread because this has to deal with the user interface
+        performSelector(onMainThread: #selector(showError), with: nil, waitUntilDone: false)
     }
     
     // Parse the JSON data occording to the key and then store it in a dictionary. Append the dictionary obj to the array
@@ -56,7 +64,7 @@ class ViewController: UITableViewController {
             petitions.append(obj)
         }
         
-        tableView.reloadData()
+        tableView.performSelector(onMainThread: #selector(UITableView.reloadData), with: nil, waitUntilDone: false)
     }
     
     func showError() {
